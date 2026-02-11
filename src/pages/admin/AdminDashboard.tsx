@@ -124,27 +124,6 @@ export default function AdminDashboard() {
                     </button>
                 </div>
 
-                {/* INFO RUANGAN GRID */}
-                <div className="mb-8">
-                    <h3 className="text-lg font-bold text-slate-700 mb-4">Daftar Ruangan</h3>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 2xl:grid-cols-6 gap-5">
-                        {rooms.map(room => (
-                            <div key={room.id} className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition-all h-full flex flex-col">
-                                <div className="flex justify-between items-start mb-2">
-                                    <div className="bg-slate-100 p-2 rounded-lg text-slate-600">
-                                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
-                                    </div>
-                                    <span className="text-xs font-bold text-slate-500 border border-slate-200 px-2 py-1 rounded">Cap: {room.capacity}</span>
-                                </div>
-                                <h4 className="font-bold text-slate-800 text-md">{room.name}</h4>
-                                <p className="text-xs text-slate-500 mt-2 leading-relaxed flex-grow">
-                                    {room.description || "Deskripsi belum diatur."}
-                                </p>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
                      {/* Stats Cards (Same as before) */}
                      <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm flex items-center gap-5">
@@ -167,6 +146,27 @@ export default function AdminDashboard() {
                     </div>
                     <div className="bg-gradient-to-br from-slate-800 to-slate-900 p-6 rounded-xl shadow-sm text-white flex items-center justify-between">
                         <div><p className="text-slate-300 text-sm font-medium">System</p><h3 className="text-2xl font-bold mt-1">Online 🟢</h3></div>
+                    </div>
+                </div>
+
+                {/* INFO RUANGAN GRID */}
+                <div className="mb-8">
+                    <h3 className="text-lg font-bold text-slate-700 mb-4">Daftar Ruangan</h3>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 2xl:grid-cols-6 gap-5">
+                        {rooms.map(room => (
+                            <div key={room.id} className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition-all h-full flex flex-col">
+                                <div className="flex justify-between items-start mb-2">
+                                    <div className="bg-slate-100 p-2 rounded-lg text-slate-600">
+                                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
+                                    </div>
+                                    <span className="text-xs font-bold text-slate-500 border border-slate-200 px-2 py-1 rounded">Cap: {room.capacity}</span>
+                                </div>
+                                <h4 className="font-bold text-slate-800 text-md">{room.name}</h4>
+                                <p className="text-xs text-slate-500 mt-2 leading-relaxed flex-grow">
+                                    {room.description || "Deskripsi belum diatur."}
+                                </p>
+                            </div>
+                        ))}
                     </div>
                 </div>
 
