@@ -1,11 +1,10 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
-import UserDashboard from './pages/UserDashboard';
-import CreateBookingPage from './pages/CreateBookingPage';
-
-// Placeholder Dashboard (Kita buat di Issue selanjutnya)
-const AdminDashboard = () => <h2>Selamat Datang di Dashboard Admin <button onClick={() => {localStorage.clear(); window.location.href='/login'}}>Logout</button></h2>;
+import UserDashboard from './pages/user/UserDashboard';
+import CreateBookingPage from './pages/user/CreateBookingPage';
+import AdminDashboard from './pages/admin/AdminDashboard';
+import CreateAdminBookingPage from './pages/admin/CreateAdminBookingPage';
 
 function App() {
   return (
@@ -17,10 +16,13 @@ function App() {
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
         
-        {/* Halaman Dashboard Sementara */}
+        {/* Halaman Dashboard User */}
         <Route path="/user-dashboard" element={<UserDashboard />} />
         <Route path="/user-dashboard/create-booking" element={<CreateBookingPage />} />
+
+        {/* Halaman Dashboard Admin */}
         <Route path="/admin-dashboard" element={<AdminDashboard />} />
+        <Route path="/admin-dashboard/create-booking" element={<CreateAdminBookingPage />} />
       </Routes>
     </BrowserRouter>
   );

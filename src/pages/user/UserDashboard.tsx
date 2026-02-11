@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { api } from '../api/axios';
+import { api } from '../../api/axios';
 import { useNavigate } from 'react-router-dom';
 
 interface Booking {
@@ -61,7 +61,7 @@ export default function UserDashboard() {
                 </div>
                 <div style={{ display: 'flex', gap: 10 }}>
                     <button 
-                        onClick={() => navigate('/create-booking')} 
+                        onClick={() => navigate('/user-dashboard/create-booking')} 
                         style={{ padding: '10px 20px', background: '#0275d8', color: 'white', border: 'none', cursor: 'pointer', borderRadius: 4, fontWeight: 'bold' }}>
                         + Tambah Booking Baru
                     </button>
