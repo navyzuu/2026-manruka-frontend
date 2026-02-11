@@ -47,7 +47,7 @@ export default function AuthPage() {
                     <div className="absolute inset-0 bg-slate-900 text-white">
                         <div 
                             className="absolute inset-0 bg-cover bg-center opacity-50"
-                            style={{ backgroundImage: "url('https://images.unsplash.com/photo-1562774053-701939374585?q=80&w=1986&auto=format&fit=crop')" }}
+                            style={{ backgroundImage: "url('https://www.pens.ac.id/wp-content/uploads/2024/02/WhatsApp-Image-2024-02-26-at-10.52.25-1080x675.jpeg')" }}
                         ></div>
                         <div className="absolute inset-0 bg-gradient-to-br from-primary-900/80 to-slate-900/90"></div>
                         
