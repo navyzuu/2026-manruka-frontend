@@ -1,9 +1,9 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
+import UserDashboard from './pages/UserDashboard';
 
 // Placeholder Dashboard (Kita buat di Issue selanjutnya)
-const UserDashboard = () => <h2>Selamat Datang di Dashboard Mahasiswa <button onClick={() => {localStorage.clear(); window.location.href='/login'}}>Logout</button></h2>;
 const AdminDashboard = () => <h2>Selamat Datang di Dashboard Admin <button onClick={() => {localStorage.clear(); window.location.href='/login'}}>Logout</button></h2>;
 
 function App() {
