@@ -1,47 +1,30 @@
 import { useEffect, useState } from 'react';
 import { api } from '../../api/axios';
-import { useNavigate } from 'react-router-dom';
+import { useLoading } from '../../context/LoadingContext';
 
-interface Booking {
-    id: number;
-    roomName: string;
-    borrowerName: string;
-    date: string;
-    time: string;
-    status: string;
-}
+interface Booking { id: number; roomName: string; borrowerName: string; date: string; time: string; status: string; }
 
 export default function AdminDashboard() {
-    const navigate = useNavigate();
+    const { navigateWithDelay } = useLoading();
     const [bookings, setBookings] = useState<Booking[]>([]);
     const [stats, setStats] = useState({ totalPending: 0, todayApproved: 0 });
 
     useEffect(() => {
         const user = localStorage.getItem('user');
-        if (!user) { navigate('/login'); return; }
-        const parsedUser = JSON.parse(user);
-        if (parsedUser.role !== 'Admin') {
-            alert("Akses Ditolak.");
-            navigate('/user-dashboard');
-            return;
-        }
+        if (!user || JSON.parse(user).role !== 'Admin') { navigateWithDelay('/login'); return; }
         fetchData();
     }, []);
 
     const fetchData = async () => {
         try {
             const res = await api.get('/bookings');
-            const allBookings: Booking[] = res.data;
-            setBookings(allBookings);
-
+            setBookings(res.data);
             const todayStr = new Date().toISOString().split('T')[0];
-            const pending = allBookings.filter(b => b.status === 'Pending').length;
-            const todayAppr = allBookings.filter(b => b.status === 'Approved' && b.date === todayStr).length;
-            
-            setStats({ totalPending: pending, todayApproved: todayAppr });
-        } catch (err) {
-            console.error(err);
-        }
+            setStats({
+                totalPending: res.data.filter((b: any) => b.status === 'Pending').length,
+                todayApproved: res.data.filter((b: any) => b.status === 'Approved' && b.date === todayStr).length
+            });
+        } catch (err) { console.error(err); }
     };
 
     const updateStatus = async (id: number, newStatus: "Approved" | "Rejected") => {
@@ -49,82 +32,66 @@ export default function AdminDashboard() {
         try {
             await api.put(`/bookings/${id}/status`, newStatus, { headers: { 'Content-Type': 'application/json' } });
             fetchData();
-        } catch (error: any) {
-            alert("Gagal update: " + (error.response?.data || error.message));
-        }
+        } catch (error: any) { alert("Gagal update."); }
     };
 
-    const handleLogout = () => {
-        localStorage.removeItem('user');
-        navigate('/login');
-    };
+    const handleLogout = () => { localStorage.removeItem('user'); navigateWithDelay('/login'); };
 
     return (
-        <div style={{ padding: '20px', fontFamily: 'Arial, sans-serif', maxWidth: '1200px', margin: '0 auto' }}>
-            {/* Header dengan Tombol Tambah */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 30, borderBottom: '1px solid #333', paddingBottom: 20 }}>
-                <div>
-                    <h1 style={{ margin: 0 }}>🛡️ Admin Dashboard</h1>
-                    <p style={{ margin: '5px 0 0 0', color: '#666' }}>Pusat Kontrol Ruangan Kampus</p>
-                </div>
-                <div style={{ display: 'flex', gap: 10 }}>
-                    {/* TOMBOL BARU ADMIN BOOKING */}
-                    <button 
-                        onClick={() => navigate('/admin-dashboard/create-booking')}
-                        style={{ padding: '10px 20px', background: '#333', color: 'white', border: 'none', cursor: 'pointer', borderRadius: 4, fontWeight: 'bold' }}>
-                        + Booking Jalur Khusus
-                    </button>
-                    <button onClick={handleLogout} style={{ padding: '10px 20px', background: '#d9534f', color: 'white', border: 'none', cursor: 'pointer', borderRadius: 4 }}>Logout</button>
-                </div>
-            </div>
+        <div className="min-h-screen bg-slate-50 font-sans text-slate-800">
+            <nav className="bg-slate-900 text-white px-6 py-4 sticky top-0 z-40 shadow-md flex justify-between items-center">
+                <span className="text-xl font-bold">Manruka<span className="text-primary-400">Admin</span></span>
+                <button onClick={handleLogout} className="bg-red-600 hover:bg-red-700 px-4 py-2 rounded text-sm font-bold transition">Logout</button>
+            </nav>
 
-            {/* Statistik Cards */}
-            <div style={{ display: 'flex', gap: 20, marginBottom: 30 }}>
-                <div style={{ flex: 1, padding: 20, background: '#fff3cd', borderRadius: 8, border: '1px solid #ffeeba' }}>
-                    <h3 style={{ margin: 0, fontSize: '36px', color: '#856404' }}>{stats.totalPending}</h3>
-                    <p style={{ margin: 0, color: '#856404' }}>Menunggu Persetujuan</p>
+            <main className="max-w-7xl mx-auto p-6 lg:p-8">
+                <div className="flex justify-between items-center mb-8">
+                    <h1 className="text-3xl font-bold text-slate-800">Admin Control</h1>
+                    <button onClick={() => navigateWithDelay('/admin-dashboard/create-booking')} className="bg-slate-800 hover:bg-slate-700 text-white px-6 py-3 rounded-lg font-medium shadow-lg transition-all">⚡ Admin Quick Booking</button>
                 </div>
-                <div style={{ flex: 1, padding: 20, background: '#d4edda', borderRadius: 8, border: '1px solid #c3e6cb' }}>
-                    <h3 style={{ margin: 0, fontSize: '36px', color: '#155724' }}>{stats.todayApproved}</h3>
-                    <p style={{ margin: 0, color: '#155724' }}>Ruangan Terpakai Hari Ini</p>
-                </div>
-            </div>
 
-            {/* Tabel Approval */}
-            <h3>📝 Daftar Request Peminjaman</h3>
-            <table style={{ width: '100%', borderCollapse: 'collapse', border: '1px solid #ddd', fontSize: '14px' }}>
-                <thead style={{ background: '#f8f9fa' }}>
-                    <tr>
-                        <th style={{ padding: 10, textAlign: 'left' }}>Peminjam</th>
-                        <th style={{ padding: 10, textAlign: 'left' }}>Detail</th>
-                        <th style={{ padding: 10, textAlign: 'left' }}>Status</th>
-                        <th style={{ padding: 10, textAlign: 'center' }}>Aksi</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {bookings.map(b => (
-                        <tr key={b.id} style={{ borderBottom: '1px solid #eee', background: b.status === 'Pending' ? '#fff' : '#f9f9f9', opacity: b.status === 'Pending' ? 1 : 0.6 }}>
-                            <td style={{ padding: 10 }}><strong>{b.borrowerName}</strong></td>
-                            <td style={{ padding: 10 }}>{b.roomName}<br/><small>{b.date} ({b.time})</small></td>
-                            <td style={{ padding: 10 }}>
-                                <span style={{ 
-                                    padding: '4px 8px', borderRadius: 4, fontSize: '12px', fontWeight: 'bold',
-                                    background: b.status === 'Approved' ? '#28a745' : b.status === 'Rejected' ? '#dc3545' : '#ffc107',
-                                    color: b.status === 'Pending' ? '#333' : 'white'
-                                }}>{b.status}</span>
-                            </td>
-                            <td style={{ padding: 10, textAlign: 'center' }}>
-                                {b.status === 'Pending' && (
-                                    <div style={{ display: 'flex', gap: 5, justifyContent: 'center' }}>
-                                        <button onClick={() => updateStatus(b.id, 'Approved')} style={{ background: '#28a745', color: 'white', border: 'none', padding: '5px 10px', cursor: 'pointer', borderRadius: 4 }}>✓</button>
-                                        <button onClick={() => updateStatus(b.id, 'Rejected')} style={{ background: '#dc3545', color: 'white', border: 'none', padding: '5px 10px', cursor: 'pointer', borderRadius: 4 }}>✕</button>
-                                    </div>
-                                )}
-                            </td>
-                        </tr>
-                    ))}
-                </tbody>
-            </table>
+                <div className="grid grid-cols-2 gap-6 mb-8">
+                    <div className="bg-yellow-50 border border-yellow-200 p-6 rounded-xl">
+                        <h3 className="text-4xl font-bold text-yellow-700">{stats.totalPending}</h3>
+                        <p className="text-yellow-800 font-medium">Menunggu Persetujuan</p>
+                    </div>
+                    <div className="bg-green-50 border border-green-200 p-6 rounded-xl">
+                        <h3 className="text-4xl font-bold text-green-700">{stats.todayApproved}</h3>
+                        <p className="text-green-800 font-medium">Terpakai Hari Ini</p>
+                    </div>
+                </div>
+
+                <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                    <div className="px-6 py-4 border-b border-slate-100 bg-slate-50 font-bold text-slate-700">Daftar Request</div>
+                    <table className="w-full text-sm text-left">
+                        <thead className="bg-slate-50 text-slate-500 border-b">
+                            <tr>
+                                <th className="px-6 py-3">Peminjam</th>
+                                <th className="px-6 py-3">Detail</th>
+                                <th className="px-6 py-3">Status</th>
+                                <th className="px-6 py-3 text-center">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-100">
+                            {bookings.map(b => (
+                                <tr key={b.id} className={`hover:bg-slate-50 ${b.status !== 'Pending' ? 'opacity-60 grayscale-[0.5]' : ''}`}>
+                                    <td className="px-6 py-4 font-bold">{b.borrowerName}</td>
+                                    <td className="px-6 py-4">{b.roomName}<br/><span className="text-xs text-slate-400">{b.date} ({b.time})</span></td>
+                                    <td className="px-6 py-4"><span className={`px-2 py-1 rounded text-xs font-bold ${b.status === 'Approved' ? 'bg-green-100 text-green-700' : b.status === 'Rejected' ? 'bg-red-100 text-red-700' : 'bg-yellow-100 text-yellow-700'}`}>{b.status}</span></td>
+                                    <td className="px-6 py-4 text-center">
+                                        {b.status === 'Pending' && (
+                                            <div className="flex justify-center gap-2">
+                                                <button onClick={() => updateStatus(b.id, 'Approved')} className="bg-green-100 hover:bg-green-200 text-green-700 px-3 py-1 rounded transition">✓</button>
+                                                <button onClick={() => updateStatus(b.id, 'Rejected')} className="bg-red-100 hover:bg-red-200 text-red-700 px-3 py-1 rounded transition">✕</button>
+                                            </div>
+                                        )}
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+            </main>
         </div>
     );
 }
