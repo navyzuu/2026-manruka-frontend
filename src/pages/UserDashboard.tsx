@@ -2,13 +2,6 @@ import { useEffect, useState } from 'react';
 import { api } from '../api/axios';
 import { useNavigate } from 'react-router-dom';
 
-// Tipe Data
-interface Room {
-    id: number;
-    name: string;
-    capacity: number;
-}
-
 interface Booking {
     id: number;
     roomName: string;
@@ -21,18 +14,11 @@ interface Booking {
 export default function UserDashboard() {
     const navigate = useNavigate();
     const [user, setUser] = useState<any>(null);
-    const [bookings, setBookings] = useState<Booking[]>([]);
-    const [rooms, setRooms] = useState<Room[]>([]);
-    
-    // Form State
-    const [selectedRoom, setSelectedRoom] = useState('');
-    const [date, setDate] = useState('');
-    const [startTime, setStartTime] = useState('08:00');
-    const [endTime, setEndTime] = useState('10:00');
-    const [purpose, setPurpose] = useState('');
+    const [myBookings, setMyBookings] = useState<Booking[]>([]);
+    const [allSchedule, setAllSchedule] = useState<Booking[]>([]);
 
     useEffect(() => {
-        // 1. Cek Login & Ambil User dari LocalStorage
+        // 1. Cek Login
         const userData = localStorage.getItem('user');
         if (!userData) {
             navigate('/login');
@@ -41,27 +27,20 @@ export default function UserDashboard() {
         const parsedUser = JSON.parse(userData);
         setUser(parsedUser);
 
-        // 2. Load Data Awal
-        fetchRooms();
-        fetchMyBookings(parsedUser.name);
+        fetchBookings(parsedUser.name);
     }, []);
 
-    const fetchRooms = async () => {
-        try {
-            const res = await api.get('/rooms');
-            setRooms(res.data);
-            if (res.data.length > 0) setSelectedRoom(res.data[0].id.toString());
-        } catch (err) {
-            console.error("Gagal ambil data ruangan", err);
-        }
-    };
-
-    const fetchMyBookings = async (userName: string) => {
+    const fetchBookings = async (userName: string) => {
         try {
             const res = await api.get('/bookings');
-            // Filter Client-Side: Hanya tampilkan milik user yang sedang login
-            const myData = res.data.filter((b: any) => b.borrowerName === userName);
-            setBookings(myData);
+            const allData: Booking[] = res.data;
+
+            // Filter 1: Booking Saya (Semua Status)
+            setMyBookings(allData.filter(b => b.borrowerName === userName));
+
+            // Filter 2: Jadwal Ruangan (Hanya yang Approved agar user tahu jadwal pasti)
+            // Atau tampilkan semua biar transparan, tapi biasanya Approved yang penting.
+            setAllSchedule(allData.filter(b => b.status === 'Approved' || b.status === 'Pending')); 
         } catch (err) {
             console.error("Gagal ambil booking", err);
         }
@@ -72,101 +51,94 @@ export default function UserDashboard() {
         navigate('/login');
     };
 
-    const handleCreateBooking = async (e: React.FormEvent) => {
-        e.preventDefault();
-        if (!selectedRoom || !date) return alert("Lengkapi data!");
-
-        try {
-            await api.post('/bookings', {
-                userId: user.id,
-                roomId: parseInt(selectedRoom),
-                bookingDate: date,
-                startTime: startTime,
-                endTime: endTime,
-                purpose: purpose
-            });
-            alert("Pengajuan Berhasil!");
-            fetchMyBookings(user.name); // Refresh tabel
-            setPurpose(''); 
-        } catch (error: any) {
-            alert("Gagal: " + (error.response?.data || error.message));
-        }
-    };
-
     return (
-        <div style={{ padding: '20px', fontFamily: 'Arial, sans-serif', maxWidth: '1000px', margin: '0 auto' }}>
+        <div style={{ padding: '20px', fontFamily: 'Arial, sans-serif', maxWidth: '1200px', margin: '0 auto' }}>
             {/* Header */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20, borderBottom: '1px solid #ccc', paddingBottom: 10 }}>
-                <h2>👋 Halo, {user?.name}</h2>
-                <button onClick={handleLogout} style={{ padding: '8px 16px', background: '#d9534f', color: 'white', border: 'none', cursor: 'pointer', borderRadius: 4 }}>Logout</button>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 30, borderBottom: '1px solid #eee', paddingBottom: 20 }}>
+                <div>
+                    <h1 style={{ margin: 0 }}>👋 Halo, {user?.name}</h1>
+                    <p style={{ margin: '5px 0 0 0', color: '#666' }}>Lihat jadwal ruangan dan kelola peminjamanmu.</p>
+                </div>
+                <div style={{ display: 'flex', gap: 10 }}>
+                    <button 
+                        onClick={() => navigate('/create-booking')} 
+                        style={{ padding: '10px 20px', background: '#0275d8', color: 'white', border: 'none', cursor: 'pointer', borderRadius: 4, fontWeight: 'bold' }}>
+                        + Tambah Booking Baru
+                    </button>
+                    <button 
+                        onClick={handleLogout} 
+                        style={{ padding: '10px 20px', background: '#d9534f', color: 'white', border: 'none', cursor: 'pointer', borderRadius: 4 }}>
+                        Logout
+                    </button>
+                </div>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '30px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '40px' }}>
                 
-                {/* KOLOM KIRI: FORM PENGAJUAN */}
-                <div style={{ background: '#f8f9fa', padding: 20, borderRadius: 8, boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
-                    <h3 style={{ marginTop: 0 }}>📅 Ajukan Peminjaman</h3>
-                    <form onSubmit={handleCreateBooking} style={{ display: 'flex', flexDirection: 'column', gap: 15 }}>
-                        <div>
-                            <label style={{fontWeight: 'bold', display: 'block', marginBottom: 5}}>Pilih Ruangan</label>
-                            <select value={selectedRoom} onChange={e => setSelectedRoom(e.target.value)} style={{ padding: 8, width: '100%' }}>
-                                {rooms.map(r => (
-                                    <option key={r.id} value={r.id}>{r.name} (Kap: {r.capacity})</option>
-                                ))}
-                            </select>
-                        </div>
-
-                        <div>
-                            <label style={{fontWeight: 'bold', display: 'block', marginBottom: 5}}>Tanggal</label>
-                            <input type="date" value={date} onChange={e => setDate(e.target.value)} required style={{ padding: 8, width: '93%' }} />
-                        </div>
-
-                        <div style={{ display: 'flex', gap: 10 }}>
-                            <div style={{ flex: 1 }}>
-                                <label style={{fontWeight: 'bold', display: 'block', marginBottom: 5}}>Jam Mulai</label>
-                                <input type="time" value={startTime} onChange={e => setStartTime(e.target.value)} required style={{ width: '85%', padding: 8 }} />
-                            </div>
-                            <div style={{ flex: 1 }}>
-                                <label style={{fontWeight: 'bold', display: 'block', marginBottom: 5}}>Jam Selesai</label>
-                                <input type="time" value={endTime} onChange={e => setEndTime(e.target.value)} required style={{ width: '85%', padding: 8 }} />
-                            </div>
-                        </div>
-
-                        <div>
-                            <label style={{fontWeight: 'bold', display: 'block', marginBottom: 5}}>Keperluan</label>
-                            <textarea value={purpose} onChange={e => setPurpose(e.target.value)} required rows={3} placeholder="Contoh: Sidang TA" style={{ padding: 8, width: '93%' }} />
-                        </div>
-
-                        <button type="submit" style={{ padding: 12, background: '#0275d8', color: 'white', border: 'none', cursor: 'pointer', borderRadius: 4, fontWeight: 'bold' }}>
-                            Ajukan Peminjaman
-                        </button>
-                    </form>
-                </div>
-
-                {/* KOLOM KANAN: TABEL RIWAYAT */}
+                {/* TABEL KIRI: JADWAL SELURUH RUANGAN */}
                 <div>
-                    <h3 style={{ marginTop: 0 }}>📂 Riwayat Peminjaman Saya</h3>
-                    <table style={{ width: '100%', borderCollapse: 'collapse', border: '1px solid #ddd' }}>
-                        <thead>
-                            <tr style={{ background: '#e9ecef', textAlign: 'left' }}>
-                                <th style={{ padding: 10, borderBottom: '2px solid #ddd' }}>Ruangan</th>
-                                <th style={{ padding: 10, borderBottom: '2px solid #ddd' }}>Tanggal</th>
-                                <th style={{ padding: 10, borderBottom: '2px solid #ddd' }}>Jam</th>
-                                <th style={{ padding: 10, borderBottom: '2px solid #ddd' }}>Status</th>
+                    <h3 style={{ borderLeft: '4px solid #0275d8', paddingLeft: 10 }}>📅 Jadwal Seluruh Ruangan (Publik)</h3>
+                    <p style={{ fontSize: '14px', color: '#666' }}>Daftar ruangan yang sedang/akan digunakan oleh Civitas Akademika.</p>
+                    <table style={{ width: '100%', borderCollapse: 'collapse', border: '1px solid #ddd', fontSize: '14px' }}>
+                        <thead style={{ background: '#f1f1f1' }}>
+                            <tr>
+                                <th style={{ padding: 10, textAlign: 'left' }}>Ruangan</th>
+                                <th style={{ padding: 10, textAlign: 'left' }}>Tanggal & Jam</th>
+                                <th style={{ padding: 10, textAlign: 'left' }}>Peminjam</th>
+                                <th style={{ padding: 10, textAlign: 'left' }}>Status</th>
                             </tr>
                         </thead>
                         <tbody>
-                            {bookings.length === 0 ? (
-                                <tr><td colSpan={4} align="center" style={{ padding: 20, color: '#666' }}>Belum ada peminjaman.</td></tr>
+                            {allSchedule.length === 0 ? (
+                                <tr><td colSpan={4} align="center" style={{ padding: 20 }}>Belum ada jadwal aktif.</td></tr>
                             ) : (
-                                bookings.map(b => (
+                                allSchedule.map(b => (
                                     <tr key={b.id} style={{ borderBottom: '1px solid #eee' }}>
-                                        <td style={{ padding: 10 }}>{b.roomName}</td>
-                                        <td style={{ padding: 10 }}>{b.date}</td>
-                                        <td style={{ padding: 10 }}>{b.time}</td>
+                                        <td style={{ padding: 10, fontWeight: 'bold' }}>{b.roomName}</td>
+                                        <td style={{ padding: 10 }}>
+                                            {b.date}<br/>
+                                            <span style={{color: '#666'}}>{b.time}</span>
+                                        </td>
+                                        <td style={{ padding: 10 }}>{b.borrowerName}</td>
                                         <td style={{ padding: 10 }}>
                                             <span style={{ 
-                                                padding: '5px 10px', borderRadius: 15, color: 'white', fontSize: '12px', fontWeight: 'bold',
+                                                padding: '4px 8px', borderRadius: 4, fontSize: '12px',
+                                                background: b.status === 'Approved' ? '#d4edda' : '#fff3cd',
+                                                color: b.status === 'Approved' ? '#155724' : '#856404'
+                                            }}>
+                                                {b.status}
+                                            </span>
+                                        </td>
+                                    </tr>
+                                ))
+                            )}
+                        </tbody>
+                    </table>
+                </div>
+
+                {/* TABEL KANAN: BOOKING SAYA */}
+                <div>
+                    <h3 style={{ borderLeft: '4px solid #5cb85c', paddingLeft: 10 }}>👤 Booking Saya</h3>
+                    <p style={{ fontSize: '14px', color: '#666' }}>Riwayat pengajuan peminjaman yang Anda lakukan.</p>
+                    <table style={{ width: '100%', borderCollapse: 'collapse', border: '1px solid #ddd', fontSize: '14px' }}>
+                        <thead style={{ background: '#f1f1f1' }}>
+                            <tr>
+                                <th style={{ padding: 10, textAlign: 'left' }}>Ruangan</th>
+                                <th style={{ padding: 10, textAlign: 'left' }}>Waktu</th>
+                                <th style={{ padding: 10, textAlign: 'left' }}>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {myBookings.length === 0 ? (
+                                <tr><td colSpan={3} align="center" style={{ padding: 20 }}>Anda belum pernah meminjam.</td></tr>
+                            ) : (
+                                myBookings.map(b => (
+                                    <tr key={b.id} style={{ borderBottom: '1px solid #eee' }}>
+                                        <td style={{ padding: 10 }}>{b.roomName}</td>
+                                        <td style={{ padding: 10 }}>{b.date} ({b.time})</td>
+                                        <td style={{ padding: 10 }}>
+                                            <span style={{ 
+                                                padding: '4px 8px', borderRadius: 4, fontSize: '12px', color: 'white', fontWeight: 'bold',
                                                 background: b.status === 'Approved' ? '#28a745' : 
                                                             b.status === 'Rejected' ? '#dc3545' : '#ffc107',
                                                 color: b.status === 'Pending' ? '#333' : 'white'
@@ -180,6 +152,7 @@ export default function UserDashboard() {
                         </tbody>
                     </table>
                 </div>
+
             </div>
         </div>
     );
