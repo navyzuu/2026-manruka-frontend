@@ -3,60 +3,89 @@ import LoginForm from '../components/LoginForm';
 import RegisterForm from '../components/RegisterForm';
 
 export default function AuthPage() {
-    // State: false = Login Mode, true = Register Mode
-    const [isRegisterActive, setIsRegisterActive] = useState(false);
-
-    const handleSwitch = () => {
-        setIsRegisterActive(!isRegisterActive);
-    };
+    // State: false = Mode Login, true = Mode Register
+    const [isRegister, setIsRegister] = useState(false);
 
     return (
-        <div className="min-h-screen bg-slate-200 flex items-center justify-center p-4 font-sans overflow-hidden">
-            {/* MAIN CONTAINER */}
-            <div className={`relative bg-white rounded-2xl shadow-2xl overflow-hidden w-full max-w-[900px] min-h-[600px] flex transition-all duration-900`}>
+        <div className="min-h-screen w-full flex items-center justify-center bg-slate-100 p-4 font-sans">
+            
+            {/* CONTAINER UTAMA (Relative untuk menampung elemen absolute) */}
+            <div className="relative bg-white rounded-2xl shadow-2xl overflow-hidden w-full max-w-[1000px] min-h-[600px] flex">
 
-                {/* --- FORM SECTION --- */}
-                
-                {/* 1. Sign Up Container (Posisi Kiri, tapi opacity 0 saat mode Login) */}
-                <div className={`absolute top-0 h-full transition-all duration-1000 ease-in-out left-0 w-full md:w-1/2 ${isRegisterActive ? 'opacity-100 z-20 translate-x-0' : 'opacity-0 z-0 translate-x-full'}`}>
-                    <RegisterForm onSwitch={handleSwitch} />
+                {/* 1. FORM REGISTER (Posisi: Kiri) */}
+                {/* Form ini "diam" di kiri. Saat overlay di kanan, dia terlihat. Saat overlay di kiri, dia tertutup. */}
+                <div className={`absolute top-0 left-0 h-full w-1/2 flex items-center justify-center bg-white transition-all duration-700 ease-in-out ${isRegister ? 'opacity-100 z-10' : 'opacity-0 z-0'}`}>
+                    <div className="w-full max-w-md p-10">
+                        <div className="text-center mb-8">
+                            <h2 className="text-3xl font-bold text-slate-800">Buat Akun</h2>
+                            <p className="text-slate-500 text-sm">Gunakan data akademik Anda.</p>
+                        </div>
+                        {/* Pass fungsi kosong karena tombol switch ada di Overlay */}
+                        <RegisterForm onSwitch={() => {}} />
+                    </div>
                 </div>
 
-                {/* 2. Sign In Container (Posisi Kanan, opacity 1 saat mode Login) */}
-                <div className={`absolute top-0 h-full transition-all duration-1000 ease-in-out left-0 w-full md:w-1/2 ${isRegisterActive ? 'opacity-0 z-0 -translate-x-full' : 'opacity-100 z-20 md:translate-x-[100%]'}`}>
-                    <LoginForm onSwitch={handleSwitch} />
+                {/* 2. FORM LOGIN (Posisi: Kanan) */}
+                {/* Form ini "diam" di kanan. Saat overlay di kiri, dia terlihat. Saat overlay di kanan, dia tertutup. */}
+                <div className={`absolute top-0 right-0 h-full w-1/2 flex items-center justify-center bg-white transition-all duration-700 ease-in-out ${isRegister ? 'opacity-0 z-0' : 'opacity-100 z-10'}`}>
+                    <div className="w-full max-w-md p-10">
+                        <div className="text-center mb-8">
+                            <h2 className="text-3xl font-bold text-slate-800">Sign In</h2>
+                            <p className="text-slate-500 text-sm">Masuk ke akun Manruka Anda.</p>
+                        </div>
+                        {/* Pass fungsi kosong karena tombol switch ada di Overlay */}
+                        <LoginForm onSwitch={() => {}} />
+                    </div>
                 </div>
 
-                {/* --- OVERLAY / BANNER SECTION (Desktop Only) --- */}
-                <div className={`hidden md:block absolute top-0 left-0 h-full w-1/2 overflow-hidden transition-transform duration-700 ease-in-out z-50 ${isRegisterActive ? 'translate-x-[100%]' : 'translate-x-0'}`}>
-                    
-                    {/* Background Gradient & Content */}
-                    <div className={`bg-gradient-to-r from-primary-700 to-primary-900 text-white h-full w-[200%] absolute transition-transform duration-700 ease-in-out flex items-center justify-center ${isRegisterActive ? 'translate-x-[-50%]' : 'translate-x-0'}`}>
+                {/* 3. SLIDING OVERLAY (GAMBAR & TEKS) */}
+                {/* Ini adalah panel yang bergerak Kiri <-> Kanan */}
+                <div 
+                    className={`absolute top-0 left-0 h-full w-1/2 z-50 overflow-hidden transition-transform duration-700 ease-in-out shadow-2xl ${isRegister ? 'translate-x-[100%]' : 'translate-x-0'}`}
+                >
+                    {/* Background Image & Gradient (Full Height) */}
+                    <div className="absolute inset-0 bg-slate-900 text-white">
+                        <div 
+                            className="absolute inset-0 bg-cover bg-center opacity-50"
+                            style={{ backgroundImage: "url('https://images.unsplash.com/photo-1562774053-701939374585?q=80&w=1986&auto=format&fit=crop')" }}
+                        ></div>
+                        <div className="absolute inset-0 bg-gradient-to-br from-primary-900/80 to-slate-900/90"></div>
                         
-                        {/* Panel Kiri (Muncul saat mode Login - Mengajak Register) */}
-                        <div className="w-1/2 h-full flex flex-col items-center justify-center px-10 text-center">
-                            <h1 className="text-4xl font-bold mb-4">Halo, Mahasiswa!</h1>
-                            <p className="mb-8 text-primary-100">Daftarkan diri Anda untuk mulai menggunakan fasilitas ruangan kampus secara online.</p>
-                            <button 
-                                onClick={handleSwitch} 
-                                className="border-2 border-white text-white font-bold py-2 px-10 rounded-full hover:bg-white hover:text-primary-800 transition-all uppercase tracking-wider text-sm"
-                            >
-                                Daftar Akun
-                            </button>
-                        </div>
+                        {/* PANEL KONTEN DI DALAM SLIDER */}
+                        {/* Kita butuh -translate-x agar teks bergerak berlawanan arah dengan panel (Efek Parallax) */}
+                        <div 
+                            className={`relative h-full w-[200%] transition-transform duration-700 ease-in-out flex ${isRegister ? 'translate-x-[-50%]' : 'translate-x-0'}`}
+                        >
+                            
+                            {/* KONTEN KIRI (Muncul saat Login Mode) -> Mengajak Register */}
+                            <div className="w-1/2 h-full flex flex-col items-center justify-center px-12 text-center">
+                                <h1 className="text-4xl font-bold mb-4">Halo, Mahasiswa!</h1>
+                                <p className="mb-8 text-slate-200 leading-relaxed">
+                                    Belum memiliki akun? Daftarkan diri Anda sekarang untuk mulai meminjam ruangan secara online.
+                                </p>
+                                <button 
+                                    onClick={() => setIsRegister(true)}
+                                    className="border-2 border-white bg-transparent text-white font-bold py-3 px-10 rounded-full hover:bg-white hover:text-slate-900 transition-all uppercase tracking-wider text-sm"
+                                >
+                                    Daftar Disini
+                                </button>
+                            </div>
 
-                        {/* Panel Kanan (Muncul saat mode Register - Mengajak Login) */}
-                        <div className="w-1/2 h-full flex flex-col items-center justify-center px-10 text-center">
-                            <h1 className="text-4xl font-bold mb-4">Selamat Datang!</h1>
-                            <p className="mb-8 text-primary-100">Sudah memiliki akun? Silakan masuk untuk melihat jadwal dan riwayat peminjaman.</p>
-                            <button 
-                                onClick={handleSwitch} 
-                                className="border-2 border-white text-white font-bold py-2 px-10 rounded-full hover:bg-white hover:text-primary-800 transition-all uppercase tracking-wider text-sm"
-                            >
-                                Masuk Disini
-                            </button>
-                        </div>
+                            {/* KONTEN KANAN (Muncul saat Register Mode) -> Mengajak Login */}
+                            <div className="w-1/2 h-full flex flex-col items-center justify-center px-12 text-center">
+                                <h1 className="text-4xl font-bold mb-4">Selamat Datang!</h1>
+                                <p className="mb-8 text-slate-200 leading-relaxed">
+                                    Sudah memiliki akun? Silakan masuk kembali untuk melihat status peminjaman Anda.
+                                </p>
+                                <button 
+                                    onClick={() => setIsRegister(false)}
+                                    className="border-2 border-white bg-transparent text-white font-bold py-3 px-10 rounded-full hover:bg-white hover:text-slate-900 transition-all uppercase tracking-wider text-sm"
+                                >
+                                    Masuk Disini
+                                </button>
+                            </div>
 
+                        </div>
                     </div>
                 </div>
 
